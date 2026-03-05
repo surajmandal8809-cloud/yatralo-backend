@@ -1,4 +1,4 @@
-const bcryptjs= require("bcryptjs")
+const bcryptjs = require("bcryptjs")
 
 const User = require("../models/User");
 const { generateToken } = require("../services/jwt");
@@ -6,59 +6,59 @@ const { sendResetPasswordEmail, resetPasswordEmail } = require("../services/mail
 const { generateOTP, verifyOTP } = require("../utils/otpHandler");
 
 
-const register = async(req,res) => {
-   try {
-    const {first_name, last_name, email, password, mobile}= req.body;
-    if(!first_name || !last_name || !password) {
-        throw Error("pls fill required input")
+const register = async (req, res) => {
+  try {
+    const { first_name, last_name, email, password, mobile } = req.body;
+    if (!first_name || !last_name || !password) {
+      throw Error("pls fill required input")
     }
     const type = email ? "email" : "mobile";
-     
-    if(type === "email" && !email){ 
-           throw Error("Email is Required")
-   
-      }  
-      if(type === "mobile" && !mobile){ 
-           throw Error("Mobile is Required")
-   
-      }  
 
- 
-   
-    if(mobile && mobile.length !== 10){
+    if (type === "email" && !email) {
+      throw Error("Email is Required")
+
+    }
+    if (type === "mobile" && !mobile) {
+      throw Error("Mobile is Required")
+
+    }
+
+
+
+    if (mobile && mobile.length !== 10) {
       throw Error("Mobile number must be 10 digits")
     }
-    const Exist = await User.findOne({"$or":[{email}, {mobile}]});
+    const Exist = await User.findOne({ "$or": [{ email }, { mobile }] });
 
-   
-    if(Exist && type == "mobile" && Exist.mobile_verify_at == null){
-          const otp = await generateOTP(type,Exist._id);
-          return res.status(200).json({status: true, message: `OTP sent on ${type} Successfully`, data : otp})
+
+    if (Exist && type == "mobile" && Exist.mobile_verify_at == null) {
+      const otp = await generateOTP(type, Exist._id);
+      return res.status(200).json({ status: true, message: `OTP sent on ${type} Successfully`, data: otp })
     }
 
-    if(Exist && type == "email" && Exist.email_verify_at == null){
-        const otp = await generateOTP(type,Exist._id);
-          return res.status(200).json({status: true, message: `OTP sent on ${type} Successfully`, data : otp})
+    if (Exist && type == "email" && Exist.email_verify_at == null) {
+      const otp = await generateOTP(type, Exist._id);
+      return res.status(200).json({ status: true, message: `OTP sent on ${type} Successfully`, data: otp })
     }
 
-    if(Exist){
-      return res.status(404).json({status: true, message: "User Exist"})
+    if (Exist) {
+      return res.status(404).json({ status: true, message: "User Exist" })
     }
 
-    const hashPassword =  await bcryptjs.hash(password,16);
+    const hashPassword = await bcryptjs.hash(password, 16);
 
-    await User.create({
-        first_name,
-        last_name,
-        email,
-        mobile,
-        password: hashPassword
+    const user = await User.create({
+      first_name,
+      last_name,
+      email,
+      mobile,
+      password: hashPassword
     })
-     const otp = await generateOTP(type,Exist._id);
-          return res.status(200).json({status: true, message: `OTP sent on ${type} Successfully`, data : otp})
-   } catch (error) {
-     return res.status(500).json({status: false, message: error.message})
-   }
+    const otp = await generateOTP(type, user._id);
+    return res.status(200).json({ status: true, message: `OTP sent on ${type} Successfully`, data: otp })
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message })
+  }
 }
 
 
@@ -66,53 +66,53 @@ const register = async(req,res) => {
 
 
 // Login for both email and mobile users to send OTP for verification before login and generating token after successful OTP verification in verify controller
-const login = async(req,res) => {
-   try {
-    const {email, mobile, password }= req.body;
+const login = async (req, res) => {
+  try {
+    const { email, mobile, password } = req.body;
 
-        const type = email ? "email" : "mobile";
-     
-    if(type === "email" && !email){ 
-           throw Error("Email is Required")
-   
-      }  
-      if(type === "mobile" && !mobile){ 
-           throw Error("Mobile is Required")
-   
-      }  
+    const type = email ? "email" : "mobile";
 
-      if(!password) {
-        throw Error("pls fill required input")
+    if (type === "email" && !email) {
+      throw Error("Email is Required")
+
     }
-   
-    const Exist = await User.findOne({"$or":[{email}, {mobile}]});
+    if (type === "mobile" && !mobile) {
+      throw Error("Mobile is Required")
 
-    if(!Exist){
-      return res.status(404).json({status: true, message: "User Not Exist"})
     }
 
-    if(type == "mobile" && Exist.mobile_verify_at == null){
-        return res.status(400).json({status: true, message: "Please verify your mobile number"})
+    if (!password) {
+      throw Error("pls fill required input")
     }
 
-    if(type == "email" && Exist.email_verify_at == null){
-          return res.status(400).json({status: true, message: "Please verify your email"})
+    const Exist = await User.findOne({ "$or": [{ email }, { mobile }] });
+
+    if (!Exist) {
+      return res.status(404).json({ status: true, message: "User Not Exist" })
     }
 
-    
-
-    const user =await bcryptjs.compare(password,Exist.password)
-       if(!user){
-      return res.status(404).json({status: true, message: "Invalid Credentials"})
+    if (type == "mobile" && Exist.mobile_verify_at == null) {
+      return res.status(400).json({ status: true, message: "Please verify your mobile number" })
     }
 
-    
-      const otp = await generateOTP(type,Exist._id);
-          return res.status(200).json({status: true, message: `OTP sent on ${type} Successfully`, data : otp})
-   
-   } catch (error) {
-     return res.status(500).json({status: false, message: error.message})
-   }
+    if (type == "email" && Exist.email_verify_at == null) {
+      return res.status(400).json({ status: true, message: "Please verify your email" })
+    }
+
+
+
+    const user = await bcryptjs.compare(password, Exist.password)
+    if (!user) {
+      return res.status(404).json({ status: true, message: "Invalid Credentials" })
+    }
+
+
+    const otp = await generateOTP(type, Exist._id);
+    return res.status(200).json({ status: true, message: `OTP sent on ${type} Successfully`, data: otp })
+
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message })
+  }
 }
 
 
@@ -168,28 +168,28 @@ const forgotPassword = async (req, res) => {
     }
 
     // ================= MOBILE FLOW =================
-if (mobile) {
+    if (mobile) {
 
-  if (user.mobile_verify_at == null) {
-    return res.status(400).json({
-      status: false,
-      message: "Please verify your mobile number first",
-    });
-  }
+      if (user.mobile_verify_at == null) {
+        return res.status(400).json({
+          status: false,
+          message: "Please verify your mobile number first",
+        });
+      }
 
-  const type = "mobile";
+      const type = "mobile";
 
-  const otp = await generateOTP(type, user._id);
+      const otp = await generateOTP(type, user._id);
 
-  return res.status(200).json({
-    status: true,
-    message: `OTP sent on ${type} successfully`,
-    data: {
-      userId: user._id,
-      type: "mobile"
+      return res.status(200).json({
+        status: true,
+        message: `OTP sent on ${type} successfully`,
+        data: {
+          userId: user._id,
+          type: "mobile"
+        }
+      });
     }
-  });
-}
 
   } catch (error) {
     return res.status(500).json({
@@ -232,11 +232,9 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const hashPassword =  await bcryptjs.hash(password,16);
-
-     await User.findOneAndUpdate({email:user.email , mobile:user.mobile}, {
-      password: hashPassword
-     })
+    const hashPassword = await bcryptjs.hash(password, 16);
+    user.password = hashPassword;
+    await user.save();
 
     // ✅ Only send email if user has email
     if (user.email) {
@@ -261,43 +259,43 @@ const resetPassword = async (req, res) => {
 
 
 // OTP verification for both email and mobile
-const verify = async(req,res) => {
-   try {
-    const {userId, otp, type}= req.body;
-    if(!userId && !otp && !type) {
-        throw Error("pls fill required input")
+const verify = async (req, res) => {
+  try {
+    const { userId, otp, type } = req.body;
+    if (!userId && !otp && !type) {
+      throw Error("pls fill required input")
     }
 
     const Exist = await User.findById(userId);
 
-    if(!Exist){
-      return res.status(404).json({status: true, message: "User Not Exist"})
+    if (!Exist) {
+      return res.status(404).json({ status: true, message: "User Not Exist" })
     }
-   const verifyOTPResult = await verifyOTP(userId, otp);
-    if(!verifyOTPResult){
-      return res.status(400).json({status: true, message: "Invalid OTP"})
+    const verifyOTPResult = await verifyOTP(userId, otp);
+    if (!verifyOTPResult) {
+      return res.status(400).json({ status: true, message: "Invalid OTP" })
     }
 
-    if(type == "mobile"){
+    if (type == "mobile") {
       Exist.mobile_verify_at = new Date();
     }
-    if(type == "email"){
+    if (type == "email") {
       Exist.email_verify_at = new Date();
     }
     await Exist.save();
 
-  const token = generateToken(Exist)
-   
-     return res.status(200).json({status: true, message: "OTP Verified Successfully", data : {token}})
-   } catch (error) {
-     return res.status(500).json({status: false, message: error.message})
-   }
+    const token = generateToken(Exist)
+
+    return res.status(200).json({ status: true, message: "OTP Verified Successfully", data: { token } })
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message })
+  }
 }
 
 module.exports = {
-    register,
-    login,
-    forgotPassword,
-    resetPassword,
-    verify
+  register,
+  login,
+  forgotPassword,
+  resetPassword,
+  verify
 }

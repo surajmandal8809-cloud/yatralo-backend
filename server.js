@@ -24,10 +24,16 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // CORS configuration
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
+    origin: [
+      "http://localhost:5173",
+      "https://yatralo-frontend.vercel.app",
+      "https://yatralo-frontend-surajmandal8809-9288s-projects.vercel.app",
+      "https://www.yatralo.online"
+    ],
+    credentials: true
   })
 );
 

@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FromEmail = `"Booking System Support" <${process.env.SMTP_EMAIL}>`;
+const FromEmail = `"Yatralo Support" <${process.env.SMTP_EMAIL}>`;
 
 /**
  * Send Reset Password Email
@@ -29,7 +29,7 @@ const sendResetPasswordEmail = async (to, resetLink) => {
                 <table width="600" style="background:#fff;margin:40px auto;border-radius:8px;overflow:hidden;">
                   <tr>
                     <td style="background:#111827;color:#fff;padding:20px;text-align:center;font-size:22px;font-weight:bold;">
-                      Booking System
+                      Yatralo
                     </td>
                   </tr>
                   <tr>
@@ -47,7 +47,7 @@ const sendResetPasswordEmail = async (to, resetLink) => {
                   </tr>
                   <tr>
                     <td style="background:#f3f4f6;text-align:center;padding:15px;font-size:12px;color:#666;">
-                      © ${new Date().getFullYear()} Booking System • All Rights Reserved
+                      © ${new Date().getFullYear()} Yatralo • All Rights Reserved
                     </td>
                   </tr>
                 </table>
@@ -93,7 +93,7 @@ const resetPasswordEmail = async (to, user) => {
                   </tr>
                   <tr>
                     <td style="background:#f3f4f6;text-align:center;padding:15px;font-size:12px;color:#777;">
-                      Booking System Support
+                      Yatralo Support
                     </td>
                   </tr>
                 </table>
@@ -138,7 +138,7 @@ const sendOTPEmail = async (to, otp) => {
                   </tr>
                   <tr>
                     <td style="background:#f3f4f6;text-align:center;padding:15px;font-size:12px;color:#777;">
-                      Secure Booking System Notification
+                      Secure Yatralo Notification
                     </td>
                   </tr>
                 </table>
