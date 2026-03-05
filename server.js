@@ -23,7 +23,18 @@ app.use(session({
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended:true}));
-app.use(cors())
+
+app.use(
+  cors({
+    origin: [
+      "https://yatralo.online",
+      "https://www.yatralo.online",
+      "http://localhost:5173"
+    ],
+    credentials: true,
+  })
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
