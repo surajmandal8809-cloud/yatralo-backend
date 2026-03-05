@@ -17,7 +17,7 @@ connectDB();
 const app = express();
 
 // Port (Render will provide PORT automatically)
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 // Middleware
 app.use(express.json());
@@ -50,7 +50,7 @@ const userRoutes = require("./routes/userRoutes");
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("API Working 🚀");
+  res.send("Yatralo Backend API Running 🚀");
 });
 
 // API routes
@@ -58,6 +58,7 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
