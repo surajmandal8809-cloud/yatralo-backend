@@ -31,7 +31,8 @@ app.use(
       "http://localhost:5173",
       "https://yatralo-frontend.vercel.app",
       "https://yatralo-frontend-surajmandal8809-9288s-projects.vercel.app",
-      "https://www.yatralo.online"
+      "https://www.yatralo.online",
+      "https://surajmandal8809-cloud.github.io"
     ],
     credentials: true
   })
