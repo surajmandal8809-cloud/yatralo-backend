@@ -42,6 +42,21 @@ const searchFlights = async (req, res) => {
   }
 };
 
+const searchCities = async (req, res) => {
+  try {
+    const { keyword } = req.query;
+    if (!keyword || keyword.length < 2) {
+      return res.status(200).json({ status: true, data: [] });
+    }
+    const { searchCities: findCities } = require("../services/amadeus");
+    const cities = await findCities(keyword);
+    return res.status(200).json({ status: true, data: cities });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 module.exports = {
   searchFlights,
+  searchCities,
 };
