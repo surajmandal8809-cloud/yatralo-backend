@@ -262,18 +262,22 @@ const resetPassword = async (req, res) => {
 const verify = async (req, res) => {
   try {
     const { userId, otp, type } = req.body;
-    if (!userId && !otp && !type) {
-      throw Error("pls fill required input")
+    
+    if (!userId || !otp || !type) {
+      return res.status(400).json({ status: false, message: "Missing required fields (userId, otp, type)" });
     }
+
+    console.log(`Verifying OTP for user ${userId}, type: ${type}`);
 
     const Exist = await User.findById(userId);
 
     if (!Exist) {
-      return res.status(404).json({ status: true, message: "User Not Exist" })
+      return res.status(404).json({ status: false, message: "User Not Exist" })
     }
+
     const verifyOTPResult = await verifyOTP(userId, otp);
     if (!verifyOTPResult) {
-      return res.status(400).json({ status: true, message: "Invalid OTP" })
+      return res.status(400).json({ status: false, message: "Invalid OTP" })
     }
 
     if (type == "mobile") {
