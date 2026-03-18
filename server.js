@@ -52,12 +52,16 @@ const adminRoutes = require("./routes/adminRoutes");
 
 
 const airportRoutes = require("./routes/airportRoutes");
+const hotelRoutes = require("./routes/hotelRoutes");
+const couponRoutes = require("./routes/couponRoutes");
 
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/flights", flightRoutes);
 app.use("/admin", adminRoutes);
 app.use("/airports", airportRoutes);
+app.use("/hotels", hotelRoutes);
+app.use("/coupons", couponRoutes);
 
 // Server
 const PORT = process.env.PORT 
