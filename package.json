@@ -12,6 +12,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "amadeus": "^11.0.0",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "cookie-session": "^2.1.1",
@@ -26,7 +27,6 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "razorpay": "^2.9.6",
-    "server.js": "^1.0.0",
     "twilio": "^5.12.2"
   }
 }
