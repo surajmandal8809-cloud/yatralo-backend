@@ -1,6 +1,6 @@
 const express = require("express");
 const AdminController = require("../controllers/AdminController");
-const { verifyToken } = require("../services/jwt");
+const { verifyToken, isAdmin } = require("../services/jwt");
 
 const router = express.Router();
 
@@ -9,9 +9,11 @@ router.put("/update", verifyToken, AdminController.updateUser);
 router.put("/avatar", verifyToken, AdminController.updateAvatar);
 
 // Management Routes
-router.get("/bookings", verifyToken, AdminController.getAllBookings);
-router.post("/flights/add", verifyToken, AdminController.addFlight);
-router.post("/hotels/add", verifyToken, AdminController.addHotel);
-router.post("/buses/add", verifyToken, AdminController.addBus);
+router.get("/bookings", verifyToken, isAdmin, AdminController.getAllBookings);
+router.get("/stats", verifyToken, isAdmin, AdminController.getStats);
+router.post("/flights/add", verifyToken, isAdmin, AdminController.addFlight);
+router.post("/hotels/add", verifyToken, isAdmin, AdminController.addHotel);
+router.post("/buses/add", verifyToken, isAdmin, AdminController.addBus);
+router.post("/trains/add", verifyToken, isAdmin, AdminController.addTrain);
 
-module.exports = adminRoutes = router;
+module.exports = router;

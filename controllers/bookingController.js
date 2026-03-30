@@ -100,6 +100,16 @@ exports.verifyPayment = async (req, res) => {
             }
         );
 
+        // 🚀 4. Send Confirmation Email to Traveller
+        if (req.user?.email) {
+            try {
+                const { sendBookingConfirmationEmail } = require("../services/mail");
+                await sendBookingConfirmationEmail(req.user.email, booking);
+            } catch (err) {
+                console.error("Email Sending Error:", err);
+            }
+        }
+
         res.json({ success: true, booking });
 
     } catch (error) {

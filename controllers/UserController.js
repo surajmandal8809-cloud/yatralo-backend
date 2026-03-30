@@ -23,7 +23,7 @@ const updateUser = async (req, res) => {
     if (first_name !== undefined) user.first_name = first_name;
     if (last_name !== undefined) user.last_name = last_name;
     if (email !== undefined) user.email = email;
-    if (phone !== undefined) user.mobile = phone;   // schema field is 'mobile'
+    if (phone !== undefined) user.mobile = phone;   
     if (location !== undefined) user.location = location;
     if (bio !== undefined) user.bio = bio;
 
@@ -52,8 +52,38 @@ const updateAvatar = async (req, res) => {
   }
 };
 
+const addSavedTraveller = async (req, res) => {
+  try {
+    const { first_name, last_name, gender, type } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ status: false, message: "User Not Found" });
+
+    user.saved_travellers.push({ first_name, last_name, gender, type });
+    await user.save();
+    return res.status(200).json({ status: true, message: "Traveller Saved Successfully", data: user.saved_travellers });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+const deleteSavedTraveller = async (req, res) => {
+  try {
+    const { travellerId } = req.params;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ status: false, message: "User Not Found" });
+
+    user.saved_travellers = user.saved_travellers.filter(t => t._id.toString() !== travellerId);
+    await user.save();
+    return res.status(200).json({ status: true, message: "Traveller Deleted Successfully", data: user.saved_travellers });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 module.exports = {
   getUser,
   updateUser,
-  updateAvatar
+  updateAvatar,
+  addSavedTraveller,
+  deleteSavedTraveller
 };

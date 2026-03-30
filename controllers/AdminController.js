@@ -3,6 +3,7 @@ const Booking = require("../models/Booking");
 const Flight = require("../models/Flight");
 const Hotel = require("../models/Hotel");
 const Bus = require("../models/Bus");
+const Train = require("../models/Train");
 
 const getUser = async (req, res) => {
   try {
@@ -90,12 +91,54 @@ const addBus = async (req, res) => {
   }
 };
 
+// Train Management
+const addTrain = async (req, res) => {
+  try {
+    const train = await Train.create(req.body);
+    return res.status(201).json({ status: true, message: "Train added successfully", data: train });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
+const getStats = async (req, res) => {
+  try {
+    const bookingsCount = await Booking.countDocuments();
+    const usersCount = await require("../models/User").countDocuments();
+    const flightsCount = await Flight.countDocuments();
+    const hotelsCount = await Hotel.countDocuments();
+    const busesCount = await Bus.countDocuments();
+    const trainsCount = await Train.countDocuments();
+
+    // Summing revenue from bookings
+    const aggregateRevenue = await Booking.aggregate([
+      { $group: { _id: null, total: { $sum: "$totalPrice" } } }
+    ]);
+    const revenue = aggregateRevenue[0]?.total || 0;
+
+    return res.status(200).json({
+      status: true,
+      data: {
+        bookings: bookingsCount,
+        revenue: revenue,
+        customers: usersCount,
+        assets: flightsCount + hotelsCount + busesCount + trainsCount
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: error.message });
+  }
+};
+
 module.exports = {
   getUser,
   updateUser,
   updateAvatar,
   getAllBookings,
+  getStats,
   addFlight,
   addHotel,
-  addBus
+  addBus,
+  addTrain
 }
+

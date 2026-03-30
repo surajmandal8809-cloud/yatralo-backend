@@ -52,7 +52,15 @@ const UserSchema = new mongoose.Schema({
   bio: {
     type: String,
     default: null
-  }
+  },
+  saved_travellers: [
+    {
+      first_name: String,
+      last_name: String,
+      gender: { type: String, enum: ['MALE', 'FEMALE'] },
+      type: { type: String, enum: ['ADULT', 'CHILD', 'INFANT'], default: 'ADULT' }
+    }
+  ]
 
 }, { timestamps: true })
 

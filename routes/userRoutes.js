@@ -7,5 +7,7 @@ const router = express.Router();
 router.get("/get", verifyToken, UserController.getUser);
 router.put("/update", verifyToken, UserController.updateUser);
 router.put("/avatar", verifyToken, UserController.updateAvatar);
+router.post("/saved-traveller", verifyToken, UserController.addSavedTraveller);
+router.delete("/saved-traveller/:travellerId", verifyToken, UserController.deleteSavedTraveller);
 
 module.exports = userRoutes = router;
