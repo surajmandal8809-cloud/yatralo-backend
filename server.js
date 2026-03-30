@@ -71,9 +71,8 @@ app.use("/buses", busRoutes);
 app.use("/trains", trainRoutes);
 
 // Server
-const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || "127.0.0.1";
-
-app.listen(PORT, HOST, () => {
-    console.log(`Server running on http://${HOST}:${PORT}`);
+const PORT = process.env.PORT ;
+const HOST = process.env.HOST ;
+app.listen(PORT, () => {
+    console.log(`Server running on  ${HOST}:${PORT}`);
 });

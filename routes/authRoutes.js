@@ -31,7 +31,7 @@ router.get(
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/auth/login/failed', session: false }),
+  passport.authenticate('google', { failureRedirect: '/auth/login-failed', session: false }),
   async (req, res) => {
     try {
       console.log("Google login successful for:", req.user.email);
@@ -39,12 +39,12 @@ router.get(
       const token = generateToken(req.user);
 
       // Redirect to frontend with JWT
-      const redirectUrl = `${process.env.FRONTEND_URL}/auth/login/success?token=${token}`;
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/login-success?token=${token}`;
       console.log("Redirecting to:", redirectUrl);
       res.redirect(redirectUrl);
     } catch (err) {
       console.error("Google callback error:", err);
-      res.redirect(`${process.env.FRONTEND_URL}/auth/login/failed`);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/login-failed`);
     }
   }
 );
