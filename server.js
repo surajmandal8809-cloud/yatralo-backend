@@ -4,16 +4,37 @@ const dotenv = require("dotenv");
 const connectDB = require("./libs/connectDB");
 const passport = require("passport");
 const session = require("express-session");
+const path = require("path");
 
 dotenv.config();
 
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.error("CRITICAL ERROR: Google Auth environment variables are missing!");
+} else {
+  console.log("Google Auth credentials loaded successfully.");
+}
+
 connectDB();
 
+
 const app = express();
+app.set("trust proxy", 1);
+
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+
+// CORS
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      callback(null, true)
+    },
+    credentials: true,
+  })
+);
 
 // Session
 app.use(
@@ -21,17 +42,6 @@ app.use(
     secret: process.env.JWT_SECRET || "secret",
     resave: false,
     saveUninitialized: false,
-  })
-);
-
-// CORS (simple and stable for development)
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow all local origins for development
-      callback(null, true)
-    },
-    credentials: true,
   })
 );
 
@@ -71,8 +81,16 @@ app.use("/buses", busRoutes);
 app.use("/trains", trainRoutes);
 
 // Server
-const PORT = process.env.PORT ;
-const HOST = process.env.HOST ;
-app.listen(PORT, () => {
-    console.log(`Server running on  ${HOST}:${PORT}`);
-});
+try {
+  const PORT = process.env.PORT || 5000;
+  const HOST = process.env.HOST || "0.0.0.0";
+
+  app.listen(PORT, () => {
+    console.log(`Server running on ${HOST}:${PORT}`);
+  }).on('error', (err) => {
+    console.error("Server listen error:", err);
+  });
+} catch (startError) {
+  console.error("FATAL ERROR ON STARTUP:", startError);
+  process.exit(1);
+}

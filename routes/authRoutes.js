@@ -31,7 +31,7 @@ router.get(
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/auth/login-failed', session: false }),
+  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/auth/login?error=google_failed`, session: false }),
   async (req, res) => {
     try {
       console.log("Google login successful for:", req.user.email);
@@ -44,13 +44,13 @@ router.get(
       res.redirect(redirectUrl);
     } catch (err) {
       console.error("Google callback error:", err);
-      res.redirect(`${process.env.FRONTEND_URL}/auth/login-failed`);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=google_failed`);
     }
   }
 );
 
 // Optional: route to debug login failures
-router.get("/login/failed", (req, res) => {
+router.get("/login-failed", (req, res) => {
   res.status(401).json({ status: false, message: "Google login failed" });
 });
 

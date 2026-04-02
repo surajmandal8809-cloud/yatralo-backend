@@ -5,11 +5,17 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      clientID: process.env.GOOGLE_CLIENT_ID?.trim(),
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET?.trim(),
+      callbackURL: process.env.GOOGLE_CALLBACK_URL?.trim(),
+      proxy: true,
+      userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
+      pkce: true,
+      state: true,
     },
     async (accessToken, refreshToken, profile, done) => {
+      console.log("Google profile email:", profile.emails[0]?.value);
+
       try {
         const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
         const photo = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null;
