@@ -61,15 +61,30 @@ const searchHotels = async (req, res) => {
                 if (response.data && response.data.length > 0) {
                     console.log("Amadeus API response received. Data length:", response.data.length);
                     
-                    const hotelImages = [
-                        "/assets/img/hotels/hotel_luxury_room_1.png",
-                        "/assets/img/hotels/hotel_lobby_2.png",
-                        "/assets/img/hotels/hotel_pool_3.png",
-                        "/assets/img/hotels/hotel_facade_4.png"
+                    // STEP 3: Get Media (Images) for those hotel IDs
+                    let mediaMap = {};
+                    try {
+                        const mediaResponse = await amadeus.shopping.hotelMedia.get({
+                            hotelIds: hotelIds
+                        });
+                        if (mediaResponse.data) {
+                            mediaResponse.data.forEach(m => {
+                                mediaMap[m.hotelId] = m.media?.map(item => item.uri) || [];
+                            });
+                        }
+                    } catch (mediaErr) {
+                        console.error("Media fetch failed:", mediaErr.message);
+                    }
+
+                    const fallbackImages = [
+                        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
+                        "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80",
+                        "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80"
                     ];
 
                     hotels = response.data.map((offer, index) => {
                         const hotel = offer.hotel;
+                        const hotelMedia = mediaMap[hotel.hotelId] || [];
                         const allOffers = offer.offers || [];
                         const firstOffer = allOffers[0] || {};
                         
@@ -87,14 +102,15 @@ const searchHotels = async (req, res) => {
                             id: hotel.hotelId,
                             name: hotel.name,
                             address: hotel.address ? `${hotel.address.lines?.join(', ') || ''}` : 'Address N/A',
-                            city: hotel.cityCode,
+                            city: hotel.address?.cityName || hotel.cityCode,
+                            country: hotel.address?.countryCode,
                             price: priceInINR || (Math.floor(Math.random() * 5000) + 3000), 
                             currency: "INR",
-                            rating: hotel.rating || (3 + Math.floor(Math.random() * 2)),
+                            rating: (hotel.rating || 4),
                             description: (hotel.description && hotel.description.text) || 
-                                         "Experience premium comfort and luxury at " + hotel.name + ". Centrally located with world-class amenities and exceptional service.",
+                                         "Experience premium luxury at " + hotel.name + ". Centrally located with world-class amenities and exceptional service.",
                             amenities: hotel.amenities || ["WIFI", "BREAKFAST", "PARKING", "RESTAURANT", "AIR_CONDITIONING"],
-                            images: [hotelImages[index % hotelImages.length]], 
+                            images: hotelMedia.length > 0 ? hotelMedia : [fallbackImages[index % fallbackImages.length]], 
                             location: {
                                 lat: hotel.latitude,
                                 lng: hotel.longitude
@@ -122,105 +138,66 @@ const searchHotels = async (req, res) => {
             hotels = [
                 {
                     id: "MOCK_" + resolvedCityCode + "_1",
-                    name: "The Royal " + resolvedCityCode + " Regency",
-                    address: "Main Square, " + resolvedCityCode,
+                    name: "Grand Palace Hotel & Resort",
+                    address: "Civic Center, Central Business District",
                     city: resolvedCityCode,
-                    price: 5200,
-                    rating: 4.7,
-                    description: "Experience premium comfort and luxury. Centrally located with world-class amenities.",
-                    amenities: ["WIFI", "BREAKFAST", "POOL", "GYM", "ROOM_SERVICE"],
-                    images: ["/assets/img/hotels/hotel_luxury_room_1.png"],
-                    location: { lat: 0, lng: 0 },
-                    allOffers: [{ roomType: "Deluxe King Room", roomDescription: "Spacious room with king bed", price: 5200 }]
+                    country: "India",
+                    price: 4999,
+                    currency: "INR",
+                    rating: 4.5,
+                    description: "Experience the epitome of luxury and world-class hospitality at Grand Palace Hotel.",
+                    amenities: ["WIFI", "POOL", "GYM", "SPA", "RESTAURANT"],
+                    images: ["https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80"]
                 },
                 {
                     id: "MOCK_" + resolvedCityCode + "_2",
-                    name: "City Comfort Inn " + resolvedCityCode,
-                    address: "Airport Road, " + resolvedCityCode,
+                    name: "Azure Boutique Stay",
+                    address: "North Shore, Coastal Road",
                     city: resolvedCityCode,
-                    price: 2800,
-                    rating: 4.1,
-                    description: "Modern budget-friendly stay with easy access to the city center.",
-                    amenities: ["WIFI", "BREAKFAST", "PARKING"],
-                    images: ["/assets/img/hotels/hotel_lobby_2.png"],
-                    location: { lat: 0, lng: 0 },
-                    allOffers: [{ roomType: "Standard Queen Room", roomDescription: "Comfortable room for two", price: 2800 }]
+                    country: "India",
+                    price: 3499,
+                    currency: "INR",
+                    rating: 4.2,
+                    description: "A stylish and contemporary boutique hotel overlooking the scenic bay.",
+                    amenities: ["WIFI", "BAR", "PARKING", "AIR_CONDITIONING"],
+                    images: ["https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80"]
                 }
             ];
         }
 
-        // Save search log to MongoDB (as requested by user)
-        try {
-            await HotelSearch.create({
-                city: cityCode,
-                cityCode: resolvedCityCode,
-                checkInDate: checkInDate,
-                checkOutDate: checkOutDate,
-                guests: parseInt(adults),
-                resultsCount: hotels.length
-            });
-        } catch (dbErr) {
-            console.error("Failed to save hotel search log:", dbErr.message);
-        }
-
-        console.log("Final Hotels Data to Client:", JSON.stringify(hotels, null, 2));
-        console.log(`Sending ${hotels.length} hotels to client.`);
-        return res.json({
+        res.json({
             status: true,
             data: hotels,
-            source: hotels[0].id.startsWith("MOCK") ? "fallback" : "amadeus"
+            source: hotels[0].id.startsWith("MOCK") ? "mock" : "amadeus"
         });
+
     } catch (error) {
-        console.error("Hotel Search Execution Error:", error);
-        return res.status(500).json({
-            status: false,
-            message: "Something went wrong during hotel search.",
-            error: error.message
-        });
+        console.error("Search hotels error:", error.message);
+        res.status(500).json({ status: false, message: "Server error" });
     }
 };
 
 const saveHotelSearch = async (req, res) => {
     try {
-        const { destination, checkin, checkout, guests } = req.body;
-
-        if (!destination || !checkin || !checkout || !guests) {
-            return res.status(400).json({
-                status: false,
-                message: "All fields required",
-            });
-        }
-
-        const data = await HotelSearch.create({
-            city: destination,
-            checkInDate: checkin,
-            checkOutDate: checkout,
-            guests,
+        const hotelSearch = new HotelSearch({
+            ...req.body,
+            userId: req.user ? req.user.id : null,
         });
-
-        res.json({
-            status: true,
-            data,
-        });
+        await hotelSearch.save();
+        res.status(201).json({ status: true, data: hotelSearch });
     } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: "Failed to save",
-        });
+        res.status(500).json({ status: false, message: "Error saving search" });
     }
 };
 
 const getHotelCitySuggestions = async (req, res) => {
+    const { keyword } = req.query;
+    if (!keyword) return res.status(400).json({ status: false, message: "Keyword is required" });
+
     try {
-        const { keyword } = req.query;
-
-        if (!keyword || keyword.length < 2) {
-            return res.json({ status: true, data: [] });
-        }
-
         const response = await amadeus.referenceData.locations.get({
             keyword,
-            subType: "CITY,AIRPORT"
+            subType: 'CITY',
         });
 
         const data = response.data.map((item) => ({
@@ -238,8 +215,84 @@ const getHotelCitySuggestions = async (req, res) => {
     }
 };
 
+const getHotelIdDetails = async (req, res) => {
+    const { hotelId } = req.params;
+    const { checkInDate, checkOutDate, adults } = req.query;
+
+    if (!hotelId || !checkInDate || !checkOutDate || !adults) {
+        return res.status(400).json({
+            status: false,
+            message: "Missing parameters. Required: hotelId, checkInDate, checkOutDate, adults",
+        });
+    }
+
+    try {
+        console.log(`Fetching specific offers for Hotel ID: ${hotelId}`);
+        const response = await amadeus.shopping.hotelOffersSearch.get({
+            hotelIds: hotelId,
+            checkInDate,
+            checkOutDate,
+            adults
+        });
+
+        if (response.data && response.data.length > 0) {
+            const offer = response.data[0];
+            const hotel = offer.hotel;
+            const allOffers = offer.offers || [];
+            const firstOffer = allOffers[0] || {};
+            
+            const priceVal = firstOffer.price ? parseFloat(firstOffer.price.total) : 0;
+            const currency = firstOffer.price ? (firstOffer.price.currency || "EUR") : "EUR";
+            const priceInINR = currency !== "INR" ? Math.round(priceVal * 83) : Math.round(priceVal);
+
+            // Fetch Media before creating the result object
+            let hotelMedia = [];
+            try {
+                const mediaResponse = await amadeus.shopping.hotelMedia.get({
+                    hotelIds: hotelId
+                });
+                if (mediaResponse.data && mediaResponse.data.length > 0) {
+                    hotelMedia = mediaResponse.data[0].media?.map(item => item.uri) || [];
+                }
+            } catch (mediaErr) {
+                console.error("Single hotel media fetch failed:", mediaErr.message);
+            }
+
+            const result = {
+                id: hotel.hotelId,
+                name: hotel.name,
+                address: hotel.address ? `${hotel.address.lines?.join(', ') || ''}` : 'Address N/A',
+                city: hotel.address?.cityName || hotel.cityCode,
+                country: hotel.address?.countryCode,
+                price: priceInINR,
+                currency: "INR",
+                rating: hotel.rating || (3 + Math.floor(Math.random() * 2)),
+                description: (hotel.description && hotel.description.text) || "Premium comfort and luxury.",
+                amenities: hotel.amenities || ["WIFI", "BREAKFAST", "PARKING"],
+                images: hotelMedia.length > 0 ? hotelMedia : [
+                    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
+                    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80"
+                ],
+                allOffers: allOffers.map(o => ({
+                    roomType: o.room?.typeEstimated?.category || "Standard Room",
+                    roomDescription: o.room?.description?.text || "Comfortable guest room",
+                    price: (o.price?.currency === "INR" ? Math.round(o.price.total) : Math.round(o.price?.total * 83)) || priceInINR,
+                }))
+            };
+
+            return res.json({ status: true, data: result });
+        }
+
+        res.status(404).json({ status: false, message: "Hotel offers not found" });
+    } catch (error) {
+        console.error("Get hotel ID details error:", error.message);
+        res.status(500).json({ status: false, message: "Server error" });
+    }
+};
+
 module.exports = {
     searchHotels,
     saveHotelSearch,
     getHotelCitySuggestions,
+    getHotelIdDetails
 };
