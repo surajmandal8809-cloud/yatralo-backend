@@ -1,9 +1,28 @@
 const Amadeus = require('amadeus');
 
-const amadeus = new Amadeus({
-  clientId: process.env.AMADEUS_CLIENT_ID,
-  clientSecret: process.env.AMADEUS_CLIENT_SECRET
-});
+const { getSettings } = require("./settings");
 
-module.exports = { amadeus };
+let amadeusInstance = null;
+let lastUsedClientId = null;
+let lastUsedClientSecret = null;
+
+const getAmadeusClient = async () => {
+  const settings = await getSettings();
+  const { clientId, clientSecret } = settings.amadeus;
+
+  if (amadeusInstance && lastUsedClientId === clientId && lastUsedClientSecret === clientSecret) {
+    return amadeusInstance;
+  }
+
+  amadeusInstance = new Amadeus({
+    clientId: clientId,
+    clientSecret: clientSecret
+  });
+  lastUsedClientId = clientId;
+  lastUsedClientSecret = clientSecret;
+
+  return amadeusInstance;
+};
+
+module.exports = { getAmadeusClient };
 

@@ -25,7 +25,7 @@ const login = async (req, res) => {
     const envAdminPassword = process.env.Admin_Password;
 
     if (!admin && email.toLowerCase() === envAdminEmail?.toLowerCase()) {
-      const hashPassword = await bcryptjs.hash(envAdminPassword, 16);
+      const hashPassword = await bcryptjs.hash(envAdminPassword, 10);
       admin = await AdminModel.create({
         email: envAdminEmail,
         password: hashPassword,
@@ -145,7 +145,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const hashPassword = await bcryptjs.hash(password, 16);
+    const hashPassword = await bcryptjs.hash(password, 10);
     admin.password = hashPassword;
     await admin.save();
 

@@ -1,4 +1,4 @@
-const { amadeus } = require("../services/amadeus");
+const { getAmadeusClient } = require("../services/amadeus");
 const HotelSearch = require("../models/HotelSearch");
 
 const searchHotels = async (req, res) => {
@@ -23,6 +23,7 @@ const searchHotels = async (req, res) => {
         if (resolvedCityCode && resolvedCityCode.length !== 3) {
             console.log(`Resolving city name "${resolvedCityCode}" to IATA code...`);
             try {
+                const amadeus = await getAmadeusClient();
                 const cityResponse = await amadeus.referenceData.locations.get({
                     keyword: resolvedCityCode,
                     subType: 'CITY,AIRPORT'
@@ -40,6 +41,7 @@ const searchHotels = async (req, res) => {
 
         let hotels = [];
         try {
+            const amadeus = await getAmadeusClient();
             // STEP 1: Get list of hotels in the city
             const hotelListResponse = await amadeus.referenceData.locations.hotels.byCity.get({
                 cityCode: resolvedCityCode
@@ -195,6 +197,7 @@ const getHotelCitySuggestions = async (req, res) => {
     if (!keyword) return res.status(400).json({ status: false, message: "Keyword is required" });
 
     try {
+        const amadeus = await getAmadeusClient();
         const response = await amadeus.referenceData.locations.get({
             keyword,
             subType: 'CITY',
@@ -228,6 +231,7 @@ const getHotelIdDetails = async (req, res) => {
 
     try {
         console.log(`Fetching specific offers for Hotel ID: ${hotelId}`);
+        const amadeus = await getAmadeusClient();
         const response = await amadeus.shopping.hotelOffersSearch.get({
             hotelIds: hotelId,
             checkInDate,

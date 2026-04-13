@@ -1,25 +1,13 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
-const connectDB = require("./libs/connectDB");
-const passport = require("passport");
+const { passport, initializePassport } = require("./config/passport");
 const session = require("express-session");
 const path = require("path");
-
-dotenv.config();
-
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.error("CRITICAL ERROR: Google Auth environment variables are missing!");
-} else {
-  console.log("Google Auth credentials loaded successfully.");
-}
-
-connectDB();
-
+const connectDB = require("./libs/connectDB");
 
 const app = express();
 app.set("trust proxy", 1);
-
 
 // Middleware
 app.use(express.json());
@@ -79,18 +67,34 @@ app.use("/bookings", bookingRoutes);
 app.use("/payments", paymentRoutes);
 app.use("/buses", busRoutes);
 app.use("/trains", trainRoutes);
+app.post("/api/chat", require("./controllers/ChatController").chatWithAI);
 
-// Server
-try {
-  const PORT = process.env.PORT || 5000;
-  const HOST = process.env.HOST || "0.0.0.0";
+// Server Startup
+const startServer = async () => {
+  try {
+    const PORT = process.env.PORT || 5000;
+    const HOST = process.env.HOST || "0.0.0.0";
 
-  app.listen(PORT, () => {
-    console.log(`Server running on ${HOST}:${PORT}`);
-  }).on('error', (err) => {
-    console.error("Server listen error:", err);
-  });
-} catch (startError) {
-  console.error("FATAL ERROR ON STARTUP:", startError);
-  process.exit(1);
-}
+    // 1. Connect to Database
+    await connectDB();
+    
+    // 2. Initialize passport (requires DB settings)
+    await initializePassport();
+
+    // 3. Start Listening
+    app.listen(PORT, () => {
+      console.log(`Server running on ${HOST}:${PORT}`);
+    }).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Please kill the process or use a different port.`);
+      } else {
+        console.error("Server listen error:", err);
+      }
+    });
+  } catch (error) {
+    console.error("FATAL ERROR ON STARTUP:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

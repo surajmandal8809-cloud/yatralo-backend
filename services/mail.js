@@ -1,23 +1,33 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false, // true for 465, false for 587
-  auth: {
-    user: process.env.SMTP_EMAIL_USER,
-    pass: process.env.SMTP_EMAIL_PASSWORD,
-  },
-});
+const { getSettings } = require("./settings");
 
-const FromEmail = `"Yatralo Support" <${process.env.SMTP_EMAIL}>`;
+const getTransporter = async () => {
+  const settings = await getSettings();
+  const smtp = settings.smtp;
+  
+  return nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.port == 465, // true for 465, false for 587
+    auth: {
+      user: smtp.user,
+      pass: smtp.password,
+    },
+  });
+};
+
+const getFromEmail = async () => {
+  const settings = await getSettings();
+  return `"Yatralo Support" <${settings.smtp.fromEmail}>`;
+};
 
 /**
  * Send Reset Password Email
  */
 const sendResetPasswordEmail = async (to, resetLink) => {
   const mailOptions = {
-    from: FromEmail,
+    from: await getFromEmail(),
     to,
     subject: "Reset Your Password",
     html: `
@@ -58,6 +68,7 @@ const sendResetPasswordEmail = async (to, resetLink) => {
       </html>
     `,
   };
+  const transporter = await getTransporter();
   await transporter.sendMail(mailOptions);
 };
 
@@ -66,7 +77,7 @@ const sendResetPasswordEmail = async (to, resetLink) => {
  */
 const resetPasswordEmail = async (to, user) => {
   const mailOptions = {
-    from: FromEmail,
+    from: await getFromEmail(),
     to,
     subject: "Password Reset Successful",
     html: `
@@ -104,6 +115,7 @@ const resetPasswordEmail = async (to, user) => {
       </html>
     `,
   };
+  const transporter = await getTransporter();
   await transporter.sendMail(mailOptions);
 };
 
@@ -112,7 +124,7 @@ const resetPasswordEmail = async (to, user) => {
  */
 const sendOTPEmail = async (to, otp) => {
   const mailOptions = {
-    from: FromEmail,
+    from: await getFromEmail(),
     to,
     subject: "Your Verification Code",
     html: `
@@ -149,6 +161,7 @@ const sendOTPEmail = async (to, otp) => {
       </html>
     `,
   };
+  const transporter = await getTransporter();
   await transporter.sendMail(mailOptions);
 };
 
@@ -163,7 +176,7 @@ const sendBookingConfirmationEmail = async (to, booking) => {
   const categoryIcon = isHotel ? '🏨' : isFlight ? '✈️' : '🚆';
 
   const mailOptions = {
-    from: FromEmail,
+    from: await getFromEmail(),
     to,
     subject: `${typeLabel} Confirmed - ${booking.bookingRef}`,
     html: `
@@ -240,6 +253,7 @@ const sendBookingConfirmationEmail = async (to, booking) => {
       </html>
     `,
   };
+  const transporter = await getTransporter();
   await transporter.sendMail(mailOptions);
 };
 

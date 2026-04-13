@@ -1,12 +1,17 @@
-const BASE_URL = process.env.AVIATION_STACK_BASE_URL;
-const API_KEY = process.env.AVIATION_STACK_API_KEY;
+const { getSettings } = require("./settings");
+
+const BASE_URL_DEFAULT = "https://api.aviationstack.com/v1/flights";
 
 /* ---------------- FETCH HELPER ---------------- */
 
 async function aviationFetch(params = {}) {
   try {
-    if (!API_KEY || !BASE_URL) {
-      throw new Error("AviationStack API key or base URL missing");
+    const settings = await getSettings();
+    const API_KEY = settings?.aviationStack?.apiKey;
+    const BASE_URL = process.env.AVIATION_STACK_BASE_URL || BASE_URL_DEFAULT;
+
+    if (!API_KEY) {
+      throw new Error("AviationStack API key missing");
     }
 
     const query = new URLSearchParams({

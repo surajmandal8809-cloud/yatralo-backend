@@ -2,7 +2,7 @@ const express = require("express");
 const AdminAuthController = require("../controllers/AdminAuthController");
 const AuthController = require("../controllers/AuthController");
 const { verifyToken, generateToken } = require("../services/jwt");
-const passport = require("../config/passport");
+const { passport } = require("../config/passport");
 
 const router = express.Router();
 

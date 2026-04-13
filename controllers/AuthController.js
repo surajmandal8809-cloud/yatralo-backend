@@ -29,7 +29,7 @@ const register = async (req, res) => {
         return res.status(404).json({ status: false, message: "User Already Exist" })
     }
 
-    const hashPassword = await bcryptjs.hash(password, 16);
+    const hashPassword = await bcryptjs.hash(password, 10);
     const user = await User.create({
       first_name,
       last_name,
@@ -147,7 +147,7 @@ const resetPassword = async (req, res) => {
       return res.status(404).json({ status: false, message: "User Not Exist" });
     }
 
-    const hashPassword = await bcryptjs.hash(password, 16);
+    const hashPassword = await bcryptjs.hash(password, 10);
     user.password = hashPassword;
     await user.save();
 

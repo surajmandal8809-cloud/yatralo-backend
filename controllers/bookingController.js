@@ -1,6 +1,7 @@
 const Booking = require("../models/Booking");
 const PaymentModel = require("../models/Payment");
 const { createOrder, verifySignature } = require("../services/razorpay");
+const { getSettings } = require("../services/settings");
 
 
 // ✅ CREATE BOOKING + ORDER
@@ -36,13 +37,17 @@ exports.createBooking = async (req, res) => {
             status: "created"
         });
 
+
+        const settings = await getSettings();
+
         // 4. Send response
         res.status(201).json({
             success: true,
             bookingId: booking._id,
             orderId: order.id,
             amount: order.amount,
-            currency: order.currency
+            currency: order.currency,
+            razorpayKey: settings.razorpay?.keyId || process.env.RAZORPAY_KEY_ID
         });
 
     } catch (error) {
@@ -61,7 +66,7 @@ exports.verifyPayment = async (req, res) => {
         } = req.body;
 
         // 1. Verify Signature
-        const isValid = verifySignature(
+        const isValid = await verifySignature(
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature

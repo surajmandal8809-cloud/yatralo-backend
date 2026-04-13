@@ -1,28 +1,34 @@
-// Download the helper library from https://www.twilio.com/docs/node/install
-const twilio = require("twilio"); // Or, for ESM: import twilio from "twilio";
+const twilio = require("twilio");
+const { getSettings } = require("./settings");
 
-// Find your Account SID and Auth Token at twilio.com/console
-// and set the environment variables. See http://twil.io/secure
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = twilio(accountSid, authToken);
+const sendMessage = async (mobile, message) => {
+  try {
+    const settings = await getSettings();
+    const twilioConfig = settings?.twilio;
+    
+    const accountSid = twilioConfig?.accountSid;
+    const authToken = twilioConfig?.authToken;
+    const fromNumber = twilioConfig?.phoneNumber;
 
- const sendMessage  = async(mobile,message) => {
-
-    try {
-        
- await client.messages.create({
-    body: message,
-    from: process.env.TWILIO_PHONE_NUMBER,
-    to: "+91"+mobile,
-  });
-
-  console.log(message.body);
-  return true
-    } catch (error) {
-         console.log("twilio",error)  
-         return false
+    if (!accountSid || !authToken || !fromNumber) {
+      console.error("Twilio configuration is missing. Please set it in Admin Settings.");
+      return false;
     }
-}
 
-module.exports = {sendMessage}
+    const client = twilio(accountSid, authToken);
+
+    await client.messages.create({
+      body: message,
+      from: fromNumber,
+      to: "+91" + mobile,
+    });
+
+    console.log("SMS sent successfully to:", mobile);
+    return true;
+  } catch (error) {
+    console.error("Twilio error:", error.message);
+    return false;
+  }
+};
+
+module.exports = { sendMessage };
