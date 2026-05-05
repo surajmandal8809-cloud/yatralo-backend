@@ -25,11 +25,16 @@ app.use(
 );
 
 // Session
+const isProduction = process.env.NODE_ENV === "production";
 app.use(
   session({
     secret: process.env.JWT_SECRET || "secret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: isProduction, // Requires HTTPS in production
+      sameSite: isProduction ? "none" : "lax", // 'none' is required for cross-site OAuth redirects
+    }
   })
 );
 
