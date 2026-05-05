@@ -161,6 +161,9 @@ const resetPassword = async (req, res) => {
   }
 };
 
+
+
+
 const verify = async (req, res) => {
   try {
     const { userId, otp, type } = req.body;
