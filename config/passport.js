@@ -20,8 +20,8 @@ const initializePassport = async () => {
         callbackURL: process.env.GOOGLE_CALLBACK_URL?.trim() || "http://localhost:5000/auth/google/callback",
         proxy: true,
         userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
-        pkce: true,
-        state: true,
+        pkce: false,
+        state: false,
       },
       async (accessToken, refreshToken, profile, done) => {
         console.log("Google profile email:", profile.emails[0]?.value);

@@ -9,12 +9,14 @@ const connectDB = async () => {
         await mongoose.connect(process.env.MONGO_URL);
         console.log("DB Connected");
 
-        // Attempt to drop the problematic index that lacks sparse: true
+        // Attempt to drop the problematic indexes that lack sparse: true
         try {
             await mongoose.connection.collection('users').dropIndex('googleId_1');
-        } catch (err) {
-            // Ignore error if index doesn't exist
-        }
+        } catch (err) {}
+        try {
+            await mongoose.connection.collection('users').dropIndex('mobile_1');
+        } catch (err) {}
+
 
         // Sync indexes to recreate them correctly based on the current schema (which has sparse: true)
         try {
